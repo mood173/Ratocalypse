@@ -4,25 +4,25 @@ using System.Linq;
 
 namespace TeamOdd.Ratocalypse.Card
 {
-    public class CardDataCollection : IEnumerable<CardData>
+    public class CardCollection : IEnumerable<CardData>
     {
-        protected readonly List<CardData> _cardDataList;
+        protected readonly List<CardData> _cardList;
 
-        public CardDataCollection(params CardData[] cardDataItems)
+        public CardCollection(params CardData[] cardDataItems)
         {
-            _cardDataList = cardDataItems.ToList();
+            _cardList = cardDataItems.ToList();
         }
 
-        public int Count { get => _cardDataList.Count; }
+        public int Count { get => _cardList.Count; }
 
         public CardData GetCard(int index)
         {
-            return _cardDataList[index];
+            return _cardList[index];
         }
 
         public void AddCard(CardData cardData)
         {
-            _cardDataList.Add(cardData);
+            _cardList.Add(cardData);
         }
 
         public void AddCards(params CardData[] cardDataItems)
@@ -34,7 +34,7 @@ namespace TeamOdd.Ratocalypse.Card
         }
         public void RemoveCard(int index)
         {
-            _cardDataList.RemoveAt(index);
+            _cardList.RemoveAt(index);
         }
 
         public void RemoveCards(ISet<int> indices)
@@ -42,13 +42,13 @@ namespace TeamOdd.Ratocalypse.Card
             SortedSet<int> sortedIndices = new SortedSet<int>(indices);
             foreach (int i in sortedIndices.Reverse())
             {
-                _cardDataList.RemoveAt(i);
+                _cardList.RemoveAt(i);
             }
         }
 
         public IEnumerator<CardData> GetEnumerator()
         {
-            return _cardDataList.GetEnumerator();
+            return _cardList.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
