@@ -1,72 +1,67 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace TeamOdd.Ratocalypse.Map
+namespace TeamOdd.Ratocalypse.MapLib
 {
-    public class MapData
+    public partial class MapData
     {
         public Vector2Int Size { get; }
-        public List<List<TileData>> Tiles {get;private set;}
+        public List<List<Placement>> Placements { get; private set; }
 
         public MapData(Vector2Int size)
         {
             Size = size;
-            ResetTiles();
+            ResetPlacements();
         }
 
         public MapData(int width = 8, int height = 8)
         {
             Size = new Vector2Int(width, height);
-            ResetTiles();
+            ResetPlacements();
         }
 
-        private void ResetTiles()
+        private void ResetPlacements()
         {
-            Tiles = new List<List<TileData>>();
-            for (int x = 0; x < Size.x; x++)
+            Placements = new List<List<Placement>>();
+            for (int y = 0; y < Size.y; y++)
             {
-                Tiles.Add(new List<TileData>());
-                for (int y = 0; y < Size.y; y++)
+                Placements.Add(new List<Placement>());
+                for (int x = 0; x < Size.x; x++)
                 {
-                    Tiles[x].Add(new TileData(new Vector2Int(x, y)));
+                    Placements[y].Add(null);
                 }
             }
         }
 
-        public TileData GetTile(Vector2Int coord)
+        public Placement GetPlacement(Vector2Int coord)
         {
-            return Tiles[coord.x][coord.y];
+            return Placements[coord.y][coord.x];
         }
 
-        public IPlaceable GetPlaceble(Vector2Int coord)
+        public bool IsExist(Vector2Int coord)
         {
-            return Tiles[coord.x][coord.y].Placeable;
+            return GetPlacement(coord) != null;
         }
 
-        public void SetPlaceble(Vector2Int coord, IPlaceable placeable)
+        private Placement RemovePlaceable(Vector2Int coord)
         {
-            var tileData = GetTile(coord);
-            tileData.SetPlaceable(placeable);
+            Placement exist = GetPlacement(coord);
+            Placements[coord.y][coord.x] = null;
+            return exist;
         }
 
-        public void MovePlaceableTo(Vector2Int movablePosition, Vector2Int destination)
+        private void SetPlaceble(Vector2Int coord, Placement placement, bool force = false)
         {
-            var placeable = GetPlaceble(movablePosition);
-            if(placeable == null || placeable is not IMovable)
+            if (!force && placement != null && GetPlacement(coord) != null)
             {
-                throw new System.Exception("No movable at " + movablePosition);
+                throw new System.Exception("placement is already exist");
+            }
+            if (placement == null)
+            {
+                Debug.Log("use RemovePlaceable instead of SetPlaceble");
             }
 
-            var movable = (IMovable)placeable;
-
-            if(GetPlaceble(destination) != null)
-            {
-                throw new System.Exception("Destination " + destination + " is not empty");
-            }
-
-            SetPlaceble(movablePosition, null);
-            SetPlaceble(destination, movable);
-            movable.MoveTo(destination);
+            Placements[coord.y][coord.x] = placement;
 
         }
     }

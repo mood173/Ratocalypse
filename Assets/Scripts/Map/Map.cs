@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace TeamOdd.Ratocalypse.Map
+namespace TeamOdd.Ratocalypse.MapLib
 {
     [ExecuteInEditMode]
-    public class Map : MonoBehaviour
+    public class Map : MonoBehaviour, IMapCoord
     {
-        [SerializeField]
-        private Vector2Int _size = new Vector2Int(8, 8);
-
         [SerializeField]
         private float _tileDistance = 1.1f;
 
@@ -18,48 +15,84 @@ namespace TeamOdd.Ratocalypse.Map
         private Tile _tilePrefab;
 
         [SerializeField]
-        private Transform _tiles;
+        private Transform _tileParent;
+
+        [field: SerializeField]
+        public Vector2Int Size { get; private set; }
 
         public MapData MapData { get; private set; }
 
+        private Tile[,] _tiles;
+
         private void Awake()
         {
-            MapData = new MapData(_size);
-            Init();
+            UpdateTiles();
         }
 
-        private Vector3 GetTilePosition(Vector2Int coord)
+        private void UpdateTiles()
         {
-            var mappedX = coord.x - ((float)MapData.Size.x - 1) / 2;
-            var mappedY = coord.y - ((float)MapData.Size.y - 1) / 2;
-            return new Vector3(mappedX, 0, mappedY) * _tileDistance;
+            RemoveTiles();
+            MapData = new MapData(Size);
+            CreateTiles();
         }
 
-        private void Init()
+        private void CreateTiles()
         {
-            for (int i = _tiles.childCount - 1; i >= 0; i--)
-            {
-                GameObject.DestroyImmediate(_tiles.GetChild(i).gameObject);
-            }
+            _tiles = new Tile[MapData.Size.y, MapData.Size.x];
+
             for (int x = 0; x < MapData.Size.x; x++)
             {
                 for (int y = 0; y < MapData.Size.y; y++)
                 {
-                    var Coord = new Vector2Int(x, y);
-                    var position = GetTilePosition(Coord);
-                    var tile = Instantiate(_tilePrefab, _tiles, false);
+                    var coord = new Vector2Int(x, y);
+                    var position = GetTileLocalPosition(coord);
+                    var tile = Instantiate(_tilePrefab, _tileParent, false);
                     tile.transform.localPosition = position;
-                    tile.name = "Tile " + Coord;
+                    tile.name = "Tile " + coord;
 
-                    var tileData = MapData.GetTile(Coord);
+                    var tileData = new TileData(coord);
                     tile.Initiate(tileData);
+                    _tiles[y, x] = tile;
                 }
             }
         }
 
-        private void Update()
+        private void RemoveTiles()
         {
+            for (int i = _tileParent.childCount - 1; i >= 0; i--)
+            {
+                DestroyImmediate(_tileParent.GetChild(i).gameObject);
+                _tiles = null;
+            }
+        }
 
+        private void OnValidate()
+        {
+            StartCoroutine(UpdateMap());
+        }
+
+        private IEnumerator UpdateMap()
+        {
+            yield return null;
+            UpdateTiles();
+        }
+
+        public Tile GetTile(Vector2Int coord)
+        {
+            return _tiles[coord.y, coord.x];
+        }
+
+        public Vector3 GetTileWorldPosition(Vector2Int coord)
+        {
+            return _tiles[coord.y, coord.x].transform.position;
+        }
+
+        public Vector3 GetTileLocalPosition(Vector2Int coord)
+        {
+            var mappedX = coord.x - ((float)Size.x - 1) / 2;
+            var mappedY = coord.y - ((float)Size.y - 1) / 2;
+            var newPosition = new Vector3(mappedX, 0, mappedY) * _tileDistance;
+            return newPosition;
         }
     }
 }

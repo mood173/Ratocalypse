@@ -1,15 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-namespace TeamOdd.Ratocalypse.Map
+namespace TeamOdd.Ratocalypse.MapLib
 {
     public class Tile : MonoBehaviour
     {
-        public TileData TileData{get;private set;}
+        private TileData _tileData;
+        public Vector2Int Coord => _tileData.Coord;
 
         private void Awake()
         {
-            
+
         }
 
         private void Start()
@@ -25,7 +26,7 @@ namespace TeamOdd.Ratocalypse.Map
 
         public void Initiate(TileData tileData)
         {
-            TileData = tileData;
+            _tileData = tileData;
         }
     }
 }
