@@ -1,8 +1,13 @@
-using TeamOdd.Ratocalypse.Creature;
+using System.Collections.Generic;
+using TeamOdd.Ratocalypse.CreatureLib;
+using TeamOdd.Ratocalypse.CreatureLib.Attributes;
 using TeamOdd.Ratocalypse.MapLib;
-using TeamOdd.Ratocalypse.MapTestScripts;
+using TeamOdd.Ratocalypse.MapLib.GameLib;
+using TeamOdd.Ratocalypse.MapLib.GameLib.MovemnetLib;
+using TeamOdd.Ratocalypse.TestScripts;
 using UnityEditor;
 using UnityEngine;
+using static TeamOdd.Ratocalypse.MapLib.MapData;
 
 public class CreatureTesterWindow : EditorWindow
 {
@@ -13,31 +18,50 @@ public class CreatureTesterWindow : EditorWindow
     }
 
 
-    private CreatureFactory _creatureFactory;
+    private TestObjectCreator _creator;
     private TileSelector _tileSelector;
     private Map _map;
     private Vector2Int _coord;
+    private PlacementObject _placementObject;
+    private DirectionalMovement _movement;
     private void OnGUI()
     {
 
         
-        _creatureFactory = (CreatureFactory)EditorGUILayout.ObjectField("CreatureFactory", _creatureFactory, typeof(CreatureFactory), true);
+        _creator = (TestObjectCreator)EditorGUILayout.ObjectField("Creator", _creator, typeof(TestObjectCreator), true);
         
         _coord = EditorGUILayout.Vector2IntField("Coord", _coord);
 
         if (GUILayout.Button("create"))
         {
-            _creatureFactory.CreateCreature(_coord);
+            _creator.CreateObject(_coord);
         }
 
-        _tileSelector = (TileSelector)EditorGUILayout.ObjectField("TileSelector", _tileSelector, typeof(TileSelector), true);
+        
         _map = (Map)EditorGUILayout.ObjectField("Map", _map, typeof(Map), true);
-
-        if (GUILayout.Button("Select"))
+        if(_map!=null)
         {
-            MapAnalyzer analyzer = new MapAnalyzer(_map.MapData);
-            Debug.Log(_map.MapData);
-            _tileSelector.SelectAndMove(analyzer.Where((Vector2Int coord)=>coord.x%2==coord.y%2));
+            _tileSelector = _map.GetComponent<TileSelector>();
+        }
+        
+        _placementObject = (PlacementObject)EditorGUILayout.ObjectField("PlacementObject", _placementObject, typeof(PlacementObject), true);
+        
+
+        if (GUILayout.Button("Move"))
+        {
+            Pattern pattern = new Pattern(new List<Vector2Int> { new Vector2Int(0, 1),new Vector2Int(1, 0),new Vector2Int(-1, 0),new Vector2Int(0, -1) });
+            _map.MapData.Print();
+            Placement currentPlacement = _map.MapData.GetPlacement(_placementObject.Coord);
+            _movement = new DirectionalMovement(_map.MapData.GetPlacement(_placementObject.Coord) ,_map.MapData, pattern);
+            var selection = _movement.CreateSelection((ShapedCoordList currentCandidates,int index) =>
+            {
+                currentPlacement.SetCoord(currentCandidates.GetCoord(index));
+            },
+            (Placement placement)=>{
+                ((CreatureData)currentPlacement).Attack((IDamageable)placement,10);
+            });
+
+            _tileSelector.Select(selection);
         }
 
 

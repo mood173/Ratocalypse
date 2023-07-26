@@ -5,41 +5,54 @@ using DG.Tweening;
 using static TeamOdd.Ratocalypse.MapLib.MapData;
 using System;
 using UnityEngine.Events;
+using TeamOdd.Ratocalypse.CreatureLib.Attributes;
 
-namespace TeamOdd.Ratocalypse.Creature
+namespace TeamOdd.Ratocalypse.CreatureLib
 {
-    public class Creature : MonoBehaviour
+    public class Creature : PlacementObject
     {
-
         [SerializeField]
-        private Placement _placement;
+        protected CreatureData _creatrueData;
 
-        public Vector2Int Coord => _placement.Coord;
-
-        [SerializeField]
-        private float _duration = 0.1f;
-
-        private CreatureData _creatureData;
-        private IMapCoord _mapCoord;
-
-        public virtual void MoveTo(Vector2Int destination)
+        public override void Initiate(Placement placement, IMapCoord mapCoord)
         {
-            _placement.SetCoord(destination);
-            UpdateObjectPosition(destination);
+            _creatrueData = (CreatureData)placement;
+            base.Initiate(placement, mapCoord);
         }
 
-        public void UpdateObjectPosition(Vector2Int coord)
+        protected override void RegisterCallbacks()
         {
-            transform.DOMove(_mapCoord.GetTileWorldPosition(coord), _duration);
+            base.RegisterCallbacks();
+
+            _creatrueData.OnHpReduced.AddListener(OnHpReduced);
+            _creatrueData.OnHpRestored.AddListener(OnHpRestored);
+            _creatrueData.OnDie.AddListener(OnDie);
+            _creatrueData.OnAttack.AddListener(OnAttack);
         }
 
-        public void Initiate(CreatureData creatureData, MapData mapData, IMapCoord mapCoord, Vector2Int coord)
+        protected override void OnCoordChanged(Vector2Int coord)
         {
-            _creatureData = creatureData;
-            _mapCoord = mapCoord;
-            _placement = new Placement(mapData, coord, _placement.Shape);//shape for testing
-            _placement.OnCoordChanged.AddListener(UpdateObjectPosition);
-            UpdateObjectPosition(coord);
+            
+        }
+
+        protected virtual void OnHpReduced(float hp)
+        {
+            
+        }
+
+        protected virtual void OnHpRestored(float hp)
+        {
+            
+        }
+
+        protected virtual void OnDie()
+        {
+            
+        }
+
+        protected virtual void OnAttack(IDamageable target, float damage)
+        {
+            
         }
     }
 }
